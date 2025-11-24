@@ -70,7 +70,7 @@ Instant access to Azure pricing data:
 
 ```bash
 # Clone this repository
-git clone <your-repo-url>
+git clone https://github.com/nourshaker-msft/10xcsa.git
 cd 10x-csa
 
 # Open the deployment notebook
