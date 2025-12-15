@@ -205,14 +205,14 @@ Open your AI assistant and start asking Azure questions directly!
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Your AI Assistant                        │
+│                     Your AI Assistant                       │
 │         (VS Code Copilot, Claude Desktop, etc.)             │
 └────────────────────┬────────────────────────────────────────┘
                      │ MCP Protocol (HTTPS)
                      │
-        ┌────────────┼────────────┐
-        │            │            │
-        ▼            ▼            ▼
+        ┌────────────┼────────────┐────────────────┐
+        │            │            │                │
+        ▼            ▼            ▼                ▼
 ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
 │    AVM    │  │  Pricing  │  │ Context7  │  │MarkItDown │
 │    MCP    │  │    MCP    │  │  (External│  │    MCP    │
@@ -258,8 +258,6 @@ Typical monthly costs for this deployment (approximate):
 - ✅ HTTPS-only ingress with TLS 1.2+
 - ✅ Container images stored in private Azure Container Registry
 - ✅ Network isolation via Container Apps Environment
-- 🔒 **Consider:** Add Azure Front Door with WAF for production use
-- 🔒 **Consider:** Enable authentication (Azure AD) for production endpoints
 
 ## 🧹 Cleanup
 
@@ -286,6 +284,7 @@ Contributions are welcome! Areas for enhancement:
 - [Azure Pricing API](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices)
 - [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/)
 - [MarkItDown](https://github.com/microsoft/markitdown/tree/main)
+- [Context7](https://context7.com/)
 
 ## 🏆 Success Stories
 
