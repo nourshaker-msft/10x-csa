@@ -30,7 +30,7 @@ This repository deploys AI-powered MCP servers that integrate directly with your
 
 ## 🛠️ What's Included
 
-This repository deploys **three specialized MCP servers** to Azure Container Apps and uses an addition MCP Server :
+This repository deploys **four specialized MCP servers** to Azure Container Apps and uses an addition MCP Server :
 
 ### 1. **AVM MCP Server** 
 Provides real-time access to Azure Verified Modules (AVM):
@@ -64,9 +64,9 @@ Access up-to-date documentation for popular libraries and frameworks:
 - Support for conceptual guides and architecture information
 
 **Example queries:**
-- *"Show me the latest Azure SDK for Python documentation"*
-- *"Get code examples for using Azure Functions with Python"*
-- *"What's new in the latest version of Terraform Azure provider?"*
+- *"What are the core concepts of Microsoft Agent Framework?"*
+- *"Show me a quick start example in Python for Microsoft 365 Agent SDK"*
+- *"How do I install Terraform Enteprise?"*
 
 ### 4. **MarkItDown MCP Server**
 Convert various document formats to clean Markdown:
@@ -79,6 +79,19 @@ Convert various document formats to clean Markdown:
 - *"Convert this PDF architecture document to Markdown"*
 - *"Extract text from this Word document"*
 - *"Convert this PowerPoint presentation to readable text"*
+
+### 5. **Microsoft Learn MCP Server**
+Access official Microsoft and Azure documentation with comprehensive search and retrieval:
+- Search official Microsoft Learn documentation
+- Retrieve full documentation pages in markdown format
+- Access code samples and examples from Microsoft docs
+- Get up-to-date information on Azure services, .NET, Microsoft 365, and more
+
+**Example queries:**
+- *"Search Microsoft docs for Azure Container Apps best practices"*
+- *"Get code examples for Azure Functions with Python"*
+- *"Fetch the complete Azure Well-Architected Framework security documentation"*
+- *"Show me code samples for Azure Storage SDK in C#"*
 
 ## 📋 Prerequisites
 
