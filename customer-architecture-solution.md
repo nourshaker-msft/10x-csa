@@ -46,42 +46,37 @@ This document outlines a comprehensive Azure-based AI solution architecture desi
 
 ```mermaid
 graph TB
-    Client[Client Applications]
-    
-    subgraph "API Gateway Layer"
-        APIM[Azure API Management<br/>Basicv2]
+    Backend["Backend System"]
+    UI["UI"]
+
+    subgraph APIM_Box["Azure API Management (Basicv2)"]
+        APIM["APIM\nStandard v2"]
     end
-    
-    subgraph "Application Layer"
-        Agent[MCP Agent Service]
+
+    subgraph Foundry_Box["AI Foundry"]
+        Agent["Agent Service"]
+        LLM["LLM"]
     end
-    
-    subgraph "AI Services"
-        Foundry[AI Foundry<br/>LLM Deployment]
-        CS[Azure Content Safety]
-    end
-    
-    subgraph "Data Layer"
-        Redis[Azure Managed<br/>Redis Cache]
-        Cosmos[Cosmos DB]
-        Search[AI Search<br/>Standard]
-    end
-    
-    Client -->|API Requests| APIM
-    APIM -->|Authenticated| Agent
-    
-    Agent -->|Content Moderation| CS
-    Agent -->|LLM Queries| Foundry
-    Agent -->|Cache Read/Write| Redis
-    Agent -->|Data Persistence| Cosmos
-    Agent -->|Search Queries| Search
-    
-    Foundry -.->|Safety Check| CS
-    Search -.->|Index Data| Cosmos
-    
+
+    CS["Content Safety"]
+    Redis[("Azure Managed\nRedis Cache")]
+    Cosmos[("Cosmos DB")]
+    Search[("AI Search\nStandard")]
+
+    Backend -->|API| APIM
+    UI --> APIM
+    APIM -->|MCP| Foundry_Box
+    APIM -->|Chat| Foundry_Box
+    APIM --> CS
+    APIM --> Redis
+    Foundry_Box --> Cosmos
+    Foundry_Box --> Search
+
+    style Backend fill:#f5f5f5,stroke:#666,color:#000
+    style UI fill:#f5f5f5,stroke:#666,color:#000
     style APIM fill:#0078D4,stroke:#003366,color:#fff
     style Agent fill:#50E6FF,stroke:#0078D4,color:#000
-    style Foundry fill:#A4262C,stroke:#6B0012,color:#fff
+    style LLM fill:#A4262C,stroke:#6B0012,color:#fff
     style CS fill:#FFB900,stroke:#B8860B,color:#000
     style Redis fill:#DC382D,stroke:#8B0000,color:#fff
     style Cosmos fill:#00BCF2,stroke:#0078D4,color:#000
