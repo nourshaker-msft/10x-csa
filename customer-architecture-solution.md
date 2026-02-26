@@ -2,45 +2,43 @@
 
 ## Overview
 
-This document outlines a comprehensive Azure-based AI solution architecture designed to provide intelligent, scalable, and secure services through a managed API gateway with multiple backend services.
+This document outlines a comprehensive Azure-based AI solution architecture designed to provide intelligent, scalable, and secure services. Entry point is via **UI**, routing through Azure API Management. APIM handles content safety and caching directly, while AI Foundry orchestrates agent and LLM workloads that read and write from Cosmos DB and AI Search. **Backend System** (via API) is being wrapped with serverless MCP capabilities of APIM to be consumed by the **AI Foundry** agent
 
 ## Architecture Components
 
-### Frontend & API Management
-- **Azure API Management (Basicv2)**: API gateway providing secure access, rate limiting, authentication, and request routing
-  - Managed API endpoints
-  - Service Principal/User Zone authentication
-  - Request throttling and monitoring
+### Entry Points
+- **Backend System**: Upstream backend services that offer the AI Foundry Agent with grounding data via a standard API interface into APIM
+- **UI**: User-facing frontend that sends requests directly to APIM
 
-### AI & Intelligence Layer
-- **Azure AI Foundry**: Hub for AI model deployment and orchestration
-  - LLM deployment for natural language processing
-  - Model management and versioning
-- **Azure Content Safety**: Content moderation and safety filtering
-  - Text analysis and moderation
-  - Safety policy enforcement
+### API Gateway
+- **Azure API Management (Standardv2)**: Central gateway that routes all inbound traffic
+  - Authenticates and validates requests from both Backend System and UI
+  - Routes chat requests to AI Foundry via Chat protocol
+  - APIM offers a serverless wrapper for the backend API as MCP server
+  - Directly invokes Content Safety for input/output moderation
+  - Directly manages Azure Managed Redis Cache for semantic caching
 
-### Data & Search Services
-- **Azure AI Search (Standard)**: Intelligent search capabilities
-  - Full-text search
-  - Vector search support
-  - AI-powered indexing
+### AI Services
+- **Azure AI Foundry**: Managed boundary hosting AI Agents
+  - **Agent Service**: Orchestrates multi-step AI workflows with tooling via MCP
+  - **LLM**: Handles chat and language model inference
+  - Writes conversation history and results to Cosmos DB
+  - Queries AI Search for retrieval-augmented generation (RAG - Fabric IQ)
+- **Azure Content Safety**: Connected directly to APIM for request and response moderation
+  - Text analysis and policy enforcement before and after AI processing
 
-- **Azure Cosmos DB**: NoSQL database for global distribution
-  - Multi-region write capabilities
-  - Low-latency data access
-  - JSON document storage
+### Data & Storage Services
+- **Azure AI Search (Standard)**: Receives queries from AI Foundry for semantic and vector search
+  - Full-text and vector search support
+  - AI-powered indexing for RAG scenarios
 
-- **Azure Managed Redis Cache**: High-performance in-memory cache
+- **Azure Cosmos DB**: Receives read/write operations from AI Foundry
+  - Stores conversation history, and agent state
+  - Low-latency, globally distributed NoSQL storage
+
+- **Azure Managed Redis Cache**: Connected directly to APIM for high-speed semantic caching
+  - Response caching to reduce repeated LLM and backend calls
   - Session state management
-  - Response caching
-  - Real-time data access
-
-### Application Services
-- **MCP Agent Service**: Model Context Protocol agent orchestrating AI interactions
-  - Request processing
-  - Service coordination
-  - Response aggregation
 
 ## Architecture Diagram
 
@@ -50,7 +48,7 @@ graph TB
     UI["UI"]
 
     subgraph APIM_Box["Azure API Management (Basicv2)"]
-        APIM["APIM\nStandard v2"]
+        APIM["APIM"]
     end
 
     subgraph Foundry_Box["AI Foundry"]
@@ -59,9 +57,9 @@ graph TB
     end
 
     CS["Content Safety"]
-    Redis[("Azure Managed\nRedis Cache")]
+    Redis[("Redis Cache")]
     Cosmos[("Cosmos DB")]
-    Search[("AI Search\nStandard")]
+    Search[("AI Search - Standard")]
 
     Backend -->|API| APIM
     UI --> APIM
@@ -87,30 +85,28 @@ graph TB
 
 ### Request Processing Flow
 
-1. **Client Request**
-   - Client applications send API requests to Azure API Management endpoints
+1. **Inbound Request**
+   - **Backend System** sends API calls into APIM
+   - **UI** sends user requests directly into APIM
 
-2. **API Gateway Processing**
-   - APIM authenticates and validates incoming requests
-   - Rate limiting and throttling applied
-   - Request routed to appropriate backend service
+2. **API Gateway Processing (APIM)**
+   - Authenticates and validates all inbound requests
+   - Runs **Content Safety** — blocks non-compliant requests before forwarding
+   - Checks **Redis Cache** — returns cached response if available
+   - Routes chat requests to **AI Foundry** Agent via Reponses API for LLM inference
+   - Provides a wrapper for runtime dicoverability of the backend system via **MCP** enabling the agent invoke the backend as needed
 
-3. **Agent Orchestration**
-   - MCP Agent receives the validated request
-   - Determines required services based on request type
+3. **AI Foundry Processing**
+   - **Agent Service** orchestrates multi-step workflows via MCP
+   - **LLM** handles chat and inference requests
+   - AI Foundry queries **AI Search** for relevant context (RAG)
+   - AI Foundry reads/writes **Cosmos DB** for state, history, and data persistence
 
-4. **Service Integration**
-   - **Content Safety**: Validates input for safety compliance
-   - **Redis Cache**: Checks cache for existing results
-   - **AI Foundry LLM**: Processes natural language requests
-   - **AI Search**: Executes search queries across indexed content
-   - **Cosmos DB**: Retrieves or persists data
-   - **Content Safety**: Validates output before returning
-
-5. **Response Delivery**
-   - Agent aggregates results from various services
-   - Response cached in Redis for future requests
-   - Final response returned through APIM to client
+4. **Response Delivery**
+   - AI Foundry returns results to APIM
+   - APIM runs **Content Safety** on the response
+   - APIM writes the response to **Redis Cache** for future reuse
+   - Final response returned to the originating user via UI
 
 ## Key Features
 
@@ -120,22 +116,23 @@ graph TB
 - Redis caching reduces database load
 
 ### Security
-- API Management provides centralized security
-- Service Principal authentication
-- Content Safety ensures appropriate content filtering
-- Network isolation through VNets (recommended)
+- APIM provides centralized authentication and policy enforcement for both Backend System and UI
+- Content Safety is enforced at the APIM layer — applied to both inbound requests and outbound responses
+- AI Foundry isolates agent and LLM workloads within a managed boundary
+- Network isolation through VNets and Private Endpoints (recommended)
 
 ### Performance
-- Redis caching for low-latency responses
-- AI Search for fast full-text and vector search
-- Cosmos DB global distribution for regional performance
-- APIM response caching
+- Redis Cache connected directly at the APIM layer for maximum cache hit efficiency before AI processing
+- AI Search provides fast full-text and vector search for RAG workloads within AI Foundry
+- Cosmos DB offers low-latency data access for agent state and conversation history
+- APIM handles rate limiting and request throttling to protect downstream services
 
 ### AI Capabilities
-- Advanced LLM processing through AI Foundry
-- Intelligent search with AI Search
-- Automated content moderation
-- Vector similarity search support
+- AI Foundry hosts both the Agent Service (workflow orchestration) and LLM (chat inference) within a single managed boundary
+- Agent Service enables multi-step, tool-using AI workflows
+- LLM supports natural language understanding and generation
+- AI Search provides semantic and vector search to ground LLM responses in retrieved data (RAG)
+- Content Safety enforced at the APIM layer protects all AI inputs and outputs
 
 ## Deployment Considerations
 
@@ -157,21 +154,11 @@ graph TB
 - Cosmos DB monitoring
 - Custom dashboards for agent performance
 
-## Recommended Next Steps
-
-1. **Infrastructure as Code**: Deploy using Azure Verified Modules (AVM) with Bicep
-2. **Network Security**: Implement VNet integration and Private Endpoints
-3. **Identity Management**: Configure Azure AD integration and Managed Identities
-4. **Monitoring Setup**: Configure Application Insights and alerting
-5. **CI/CD Pipeline**: Establish deployment automation
-6. **Load Testing**: Validate performance under expected load
-7. **Disaster Recovery**: Implement backup and recovery procedures
-
-## Azure Verified Modules (AVM) Resources
+## Azure Verified Modules (AVM) Resources - Bicep
 
 Consider using the following AVM modules for deployment:
 - `avm/res/api-management/service` - API Management
-- `avm/res/ai-services/foundry` - AI Foundry (if available)
+- `avm/res/ai-services/foundry` - AI Foundry
 - `avm/res/search/search-service` - AI Search
 - `avm/res/document-db/database-account` - Cosmos DB
 - `avm/res/cache/redis` - Redis Cache
